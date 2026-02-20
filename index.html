@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FanCode Live Player</title>
+
+<!-- 🔥 JW Player Library -->
+<script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:black;
+  font-family:Arial;
+}
+#player{
+  width:100%;
+  height:100vh;
+}
+.loading{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  color:white;
+  font-size:18px;
+}
+</style>
+</head>
+<body>
+
+<div id="player"></div>
+<div class="loading" id="loading">Loading stream...</div>
+
+<script>
+
+const JSON_URL = "https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json";
+
+const params = new URLSearchParams(window.location.search);
+const matchId = params.get("id");
+
+let player;
+
+// 🔎 Extract all quality .m3u8 links from master playlist
+function extractStreams(masterText){
+    if(!masterText) return [];
+
+    const lines = masterText.split("\n");
+    const sources = [];
+
+    for(let line of lines){
+        line = line.trim();
+
+        if(line.includes(".m3u8")){
+            let label = "Auto";
+
+            if(line.includes("240p")) label = "240p";
+            else if(line.includes("360p")) label = "360p";
+            else if(line.includes("480p")) label = "480p";
+            else if(line.includes("540p")) label = "540p";
+            else if(line.includes("720p")) label = "720p";
+            else if(line.includes("1080p")) label = "1080p";
+
+            sources.push({
+                file: line,
+                label: label,
+                type: "hls"
+            });
+        }
+    }
+
+    return sources;
+}
+
+// 🚀 Load Stream From ID
+async function loadStream(){
+
+    if(!matchId){
+        document.getElementById("loading").innerText = "No match ID provided in URL";
+        return;
+    }
+
+    try{
+
+        const response = await fetch(JSON_URL);
+        const data = await response.json();
+
+        const match = data.matches.find(m => m.match_id == matchId);
+
+        if(!match){
+            document.getElementById("loading").innerText = "Match not found";
+            return;
+        }
+
+        if(!match.auto_streams || !match.auto_streams[0]){
+            document.getElementById("loading").innerText = "Stream not available";
+            return;
+        }
+
+        const masterPlaylist = match.auto_streams[0].auto;
+        const sources = extractStreams(masterPlaylist);
+
+        if(!sources.length){
+            document.getElementById("loading").innerText = "No valid stream URLs found";
+            return;
+        }
+
+        document.getElementById("loading").style.display = "none";
+
+        player = jwplayer("player");
+
+        player.setup({
+            playlist: [{
+                title: match.title,
+                sources: sources
+            }],
+            width: "100%",
+            height: "100%",
+            autostart: true,
+            primary: "html5"
+        });
+
+    }catch(error){
+        document.getElementById("loading").innerText = "Error loading stream";
+        console.log(error);
+    }
+}
+
+loadStream();
+
+</script>
+
+</body>
+</html>
