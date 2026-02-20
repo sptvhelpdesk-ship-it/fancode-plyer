@@ -4,85 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Live Sports Player</title>
-  
-  <!-- JW Player Library -->
   <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
-
   <style>
-    html, body {
-      margin: 0; height: 100%; background: black;
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    #player {
-      flex: 1; width: 100%; height: 100vh; background: black;
-    }
+    html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
+    #player { width: 100%; height: 100vh; }
     
-    /* Loading CSS */
-    #loading-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.9); display: flex; justify-content: center;
-      align-items: center; z-index: 10000; color: white;
-      font-family: Arial, sans-serif; flex-direction: column;
-    }
-    .spinner {
-      width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1);
-      border-radius: 50%; border-top-color: #e94560;
-      animation: spin 1s linear infinite; margin-bottom: 15px;
-    }
+    #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; color:white; font-family:Arial; }
+    .spinner { width:50px; height:50px; border:5px solid rgba(255,255,255,0.1); border-top-color:#e94560; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:15px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    #match-info {
-      position: absolute; top: 15px; left: 15px; color: white;
-      background: rgba(233, 69, 96, 0.9); padding: 8px 15px;
-      border-radius: 20px; font-size: 14px; z-index: 100;
-      display: none; font-family: Arial, sans-serif; font-weight: bold;
-      pointer-events: none;
-    }
-
-    /* Quality Selector Custom UI */
-    .jw-quality-selector {
-      position: absolute; bottom: 60px; right: 20px;
-      background: rgba(28, 28, 28, 0.95); backdrop-filter: blur(5px);
-      border-radius: 8px; overflow: hidden; z-index: 999999 !important;
-      display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-      border: 1px solid rgba(255,255,255,0.2); font-family: Arial, sans-serif; min-width: 140px;
-    }
-    .jw-quality-selector.show { display: block; }
+    #match-info { position:absolute; top:15px; left:15px; background:rgba(233,69,96,0.9); color:white; padding:8px 15px; border-radius:20px; font-size:14px; font-family:Arial; font-weight:bold; z-index:100; display:none; pointer-events:none; }
     
-    .jw-quality-item {
-      padding: 12px 20px; color: rgba(255,255,255,0.9); cursor: pointer;
-      font-size: 14px; transition: all 0.2s; text-align: right;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .jw-quality-item:last-child { border-bottom: none; }
-    .jw-quality-item:hover { background: rgba(233, 69, 96, 0.5); color: white; }
+    /* Quality Menu */
+    .jw-quality-selector { position:absolute; bottom:60px; right:20px; background:rgba(28,28,28,0.95); backdrop-filter:blur(5px); border-radius:8px; z-index:999999; display:none; border:1px solid rgba(255,255,255,0.2); font-family:Arial; min-width:140px; box-shadow:0 5px 20px rgba(0,0,0,0.8); }
+    .jw-quality-selector.show { display:block; }
+    .jw-quality-item { padding:12px 20px; color:rgba(255,255,255,0.9); cursor:pointer; font-size:14px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .jw-quality-item:last-child { border-bottom:none; }
+    .jw-quality-item:hover { background:rgba(233,69,96,0.5); color:white; }
+    .jw-quality-item.active { background:#e94560; color:white; font-weight:bold; position:relative; }
+    .jw-quality-item.active::before { content:'✓'; position:absolute; left:15px; color:white; }
     
-    .jw-quality-item.active { background: #e94560; color: white; font-weight: bold; position: relative;}
-    .jw-quality-item.active::before { content: '✓'; position: absolute; left: 15px; color: white; }
-    
-    /* Settings Gear Button Hover */
-    .jw-quality-btn { opacity: 0.8; transition: opacity 0.2s; }
-    .jw-quality-btn:hover { opacity: 1; }
-
-    #quality-loading {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
-      border-radius: 30px; font-size: 14px; z-index: 99999; display: none;
-      font-family: Arial, sans-serif; border: 1px solid rgba(255,255,255,0.2);
-    }
+    #quality-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:30px; font-size:14px; z-index:99999; display:none; font-family:Arial; border:1px solid rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
-
-  <div id="loading-overlay">
-    <div class="spinner"></div>
-    <div id="loading-text">Loading Stream...</div>
-  </div>
-  
+  <div id="loading-overlay"><div class="spinner"></div><div id="loading-text">Loading Stream...</div></div>
   <div id="quality-loading">Switching quality...</div>
   <div id="match-info"></div>
   <div id="quality-selector" class="jw-quality-selector"></div>
-
   <div id="player"></div>
 
   <script>
@@ -94,161 +43,84 @@
     let player = null;
     let currentQuality = '';
     let qualityUrls = [];
-    let isPlayerReady = false;
-    let isLoading = false;
 
-    function showLoading(show, text = "Loading Stream...") {
-      document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
-      if(show) document.getElementById('loading-text').innerText = text;
+    function showLoading(s, t="Loading...") {
+      document.getElementById('loading-overlay').style.display = s ? 'flex' : 'none';
+      if(s) document.getElementById('loading-text').innerText = t;
     }
 
-    function showMatchInfo(title, status) {
-      const el = document.getElementById('match-info');
-      el.innerText = title + ' - ' + status;
-      el.style.display = 'block';
-    }
-
-    function extractStreamUrls(m3u8Text) {
-      if (!m3u8Text) return [];
-      const lines = m3u8Text.split('\n');
+    function extractStreamUrls(text) {
+      if(!text) return [];
+      const lines = text.split('\n');
       const streams = [];
-      
-      const qualityMap = {
-        '240p': { order: 1 },
-        '360p': { order: 2 },
-        '480p': { order: 3 },
-        '540p': { order: 4 },
-        '720p': { order: 5 },
-        '1080p': { order: 6 }
-      };
-
-      for (let line of lines) {
+      const qMap = {'240p':1, '360p':2, '480p':3, '540p':4, '720p':5, '1080p':6};
+      for(let line of lines) {
         line = line.trim();
-        if (line.startsWith('http')) {
-          let quality = 'Auto';
-          if (line.includes('240p')) quality = '240p';
-          else if (line.includes('360p')) quality = '360p';
-          else if (line.includes('480p')) quality = '480p';
-          else if (line.includes('540p')) quality = '540p';
-          else if (line.includes('720p')) quality = '720p';
-          else if (line.includes('1080p')) quality = '1080p';
-
-          streams.push({
-            url: line,
-            quality: quality,
-            order: qualityMap[quality]?.order || 0
-          });
+        if(line.startsWith('http')) {
+          let q = 'Auto';
+          if(line.includes('240p')) q='240p'; else if(line.includes('360p')) q='360p'; else if(line.includes('480p')) q='480p'; else if(line.includes('540p')) q='540p'; else if(line.includes('720p')) q='720p'; else if(line.includes('1080p')) q='1080p';
+          streams.push({url:line, quality:q, order: qMap[q]||0});
         }
       }
-      return streams.sort((a, b) => b.order - a.order);
+      return streams.sort((a,b) => b.order - a.order);
     }
 
-    function buildQualityMenu() {
-      const selector = document.getElementById('quality-selector');
-      selector.innerHTML = '';
-      qualityUrls.forEach(stream => {
-        const item = document.createElement('div');
-        item.className = 'jw-quality-item';
-        if(stream.quality === currentQuality) item.classList.add('active');
-        item.innerText = stream.quality;
-        item.onclick = (e) => {
-          e.stopPropagation();
-          changeQuality(stream.url, stream.quality);
-          document.getElementById('quality-selector').classList.remove('show');
+    function buildMenu() {
+      const sel = document.getElementById('quality-selector');
+      sel.innerHTML = '';
+      qualityUrls.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'jw-quality-item';
+        if(s.quality === currentQuality) div.classList.add('active');
+        div.innerText = s.quality;
+        div.onclick = (e) => { 
+          e.stopPropagation(); 
+          changeQuality(s.url, s.quality); 
+          sel.classList.remove('show'); 
         };
-        selector.appendChild(item);
+        sel.appendChild(div);
       });
     }
-
-    // 🔴 Advanced Bulletproof Injection: JW Player যতই রিফ্রেশ হোক, সেটিংস বাটন হারাবে না!
-    function addQualityButton() {
-      setInterval(() => {
-        // যদি বাটন আগে থেকেই থাকে, তাহলে নতুন করে বানানোর দরকার নেই
-        if (document.querySelector('.jw-quality-btn')) return;
-
-        const rightBar = document.querySelector('.jw-right');
-        const fullscreenBtn = document.querySelector('.jw-icon-fullscreen');
-        
-        if (rightBar) {
-          const btn = document.createElement('div');
-          btn.className = 'jw-icon jw-icon-inline jw-button-color jw-reset jw-quality-btn';
-          btn.style.cssText = 'display: flex !important; align-items: center; justify-content: center; cursor: pointer; width: 44px; height: 100%; z-index: 999; pointer-events: auto;';
-          btn.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19.4 13c.1-.6.1-1.3 0-1.9l2.1-1.6c.2-.2.3-.5.1-.7l-2-3.5c-.2-.3-.5-.4-.8-.3l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c0-.3-.3-.5-.6-.5h-4c-.3 0-.6.2-.6.5l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.3-.1-.6 0-.8.3l2-3.5c-.1.2-.1.5-.1-.7l-2.1-1.6zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/></svg>`;
-          
-          btn.onclick = (e) => { 
-            e.stopPropagation(); 
-            document.getElementById('quality-selector').classList.toggle('show'); 
-          };
-          
-          if (fullscreenBtn && fullscreenBtn.parentNode) {
-            fullscreenBtn.parentNode.insertBefore(btn, fullscreenBtn);
-          } else {
-            rightBar.appendChild(btn);
-          }
-        }
-      }, 1000); // প্রতি ১ সেকেন্ড পর পর চেক করবে বাটন আছে কিনা
-    }
-
-    // স্ক্রিনের অন্য জায়গায় ক্লিক করলে মেনু বন্ধ হওয়া
-    document.addEventListener('click', (e) => {
-      const btn = document.querySelector('.jw-quality-btn');
-      const selector = document.getElementById('quality-selector');
-      if (selector.classList.contains('show')) {
-        if (btn && !btn.contains(e.target) && !selector.contains(e.target)) {
-          selector.classList.remove('show');
-        }
-      }
-    });
 
     function changeQuality(url, label) {
-      if (!player || !isPlayerReady || isLoading) return;
-      isLoading = true;
       currentQuality = label;
-      buildQualityMenu();
-      
+      buildMenu();
       document.getElementById('quality-loading').style.display = 'block';
-      const time = player.getPosition();
+      const pos = player.getPosition();
       
-      const proxiedUrl = proxyBaseUrl + encodeURIComponent(url);
-      
-      player.load([{ file: proxiedUrl, label: label }]);
+      // type: 'hls' যুক্ত করা হলো যাতে মোবাইল এটাকে লাইভ স্ট্রিম হিসেবেই ধরে
+      player.load([{ file: proxyBaseUrl + encodeURIComponent(url), label: label, type: 'hls' }]);
       player.once('play', () => {
         document.getElementById('quality-loading').style.display = 'none';
-        isLoading = false;
-        if(time > 0) player.seek(time);
+        if(pos > 0) player.seek(pos);
       });
     }
 
-    async function loadStreamFromId() {
-      if (!matchId) return showLoading(true, "Error: No match ID provided in URL!");
-
+    async function init() {
+      if(!matchId) return showLoading(true, "Error: No Match ID");
       try {
         const res = await fetch(jsonUrl);
         const data = await res.json();
         const match = data.matches.find(m => m.match_id == matchId);
-
-        if (!match) return showLoading(true, "No match found with ID: " + matchId);
+        if(!match) return showLoading(true, "Match Not Found");
         
-        showMatchInfo(match.title, match.status);
-        if (match.status !== "LIVE") return showLoading(true, "This match is not live right now.");
+        document.getElementById('match-info').innerText = match.title + ' - ' + match.status;
+        document.getElementById('match-info').style.display = 'block';
+        
+        const rawText = match.auto_streams && match.auto_streams[0] ? match.auto_streams[0].auto : null;
+        if(!rawText) return showLoading(true, "No Stream Data");
+        
+        qualityUrls = extractStreamUrls(rawText);
+        if(qualityUrls.length === 0) return showLoading(true, "Stream Not Available");
+        
+        const def = qualityUrls[0];
+        currentQuality = def.quality;
+        buildMenu();
 
-        const rawM3u8Text = match.auto_streams && match.auto_streams[0] ? match.auto_streams[0].auto : null;
-
-        if (!rawM3u8Text) return showLoading(true, "No valid stream data found.");
-
-        qualityUrls = extractStreamUrls(rawM3u8Text);
-
-        if (!qualityUrls || qualityUrls.length === 0) return showLoading(true, "Stream not available.");
-
-        const defaultStream = qualityUrls[0];
-        currentQuality = defaultStream.quality;
-        buildQualityMenu();
-
-        const finalPlayUrl = proxyBaseUrl + encodeURIComponent(defaultStream.url);
-
-        player = jwplayer('player');
-        player.setup({
-          file: finalPlayUrl,
+        // 👉 type: 'hls' - এটাই মোবাইল ব্রাউজারকে ঠিক করবে
+        player = jwplayer('player').setup({
+          file: proxyBaseUrl + encodeURIComponent(def.url),
+          type: 'hls', 
           autostart: true,
           mute: false,
           width: '100%',
@@ -256,60 +128,46 @@
           stretching: 'uniform',
           controls: true,
           primary: 'html5',
-          hlshtml: true,
-          androidhls: true,
-          preload: 'auto'
+          hlshtml: true
         });
 
         player.on('ready', () => {
           showLoading(false);
-          addQualityButton();
-          isPlayerReady = true;
-          isLoading = false;
+          
+          // 👉 THE BULLETPROOF OFFICIAL API (আর কোনো Hack নয়)
+          const gearSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xOS40IDEzYy4xLS42LjEtMS4zIDAtMS45bDIuMS0xLjZjLjItLjIuMy0uNS4xLS43bC0yLTMuNWMtLjItLjMtLjUtLjQtLjgtLjNsLTIuNSAxYy0uNS0uNC0xLjEtLjctMS43LTFsLS40LTIuNmMwLS4zLS4zLS41LS42LS41aC00Yy0uMyAwLS42LjItLjYuNWwtLjQgMi42Yy0uNi4zLTEuMi42LTEuNyAxbC0yLjUtMWMtLjMtLjEtLjYgMC0uOC4zbC0yIDMuNWMtLjEuMi0uMS41LjEuN2wyLjEgMS42Yy0uMS42LS4xIDEuMyAwIDEuOWwtMi4xIDEuNmMtLjIuMi0uMy41LS4xLjdsMiAzLjVjLjIuMy41LjQuOC4zbDIuNS0xYzEuNS40IDEuMS43IDEuNyAxbC40IDIuNmMwIC4zLjMuNS42LjVoNGMuMyAwIC42LS4yLjYtLjVsLjQtMi42Yy42LS4zIDEuMi0uNiAxLjctMWwyLjUgMWMuMy4xLjYgMCAuOC0uM2wyLTMuNWMuMS0uMi4xLS41LS4xLS43bC0yLjEtMS42em0tNy40IDIuNWMtMS45IDAtMy41LTEuNi0zLjUtMy41czEuNi0zLjUgMy41LTMuNSAzLjUgMS42IDMuNSAzLjUtMS42IDMuNS0zLjUgMy41eiIvPjwvc3ZnPg==";
+          
+          try {
+            player.addButton(
+              gearSvg,
+              "Quality",
+              () => { document.getElementById('quality-selector').classList.toggle('show'); },
+              "quality-settings-btn"
+            );
+          } catch(e) { console.log("JW Player addButton API failed"); }
         });
 
-        player.on('error', () => {
-          showLoading(true, "Stream Error. Please reload.");
+        // বাইরে ক্লিক করলে মেনু হাইড হবে
+        document.addEventListener('click', (e) => {
+          const sel = document.getElementById('quality-selector');
+          if(sel.classList.contains('show') && !e.target.closest('.jw-button-color') && !sel.contains(e.target)) {
+            sel.classList.remove('show');
+          }
         });
 
-      } catch (err) {
-        showLoading(true, "Failed to load JSON data.");
-        console.error(err);
+      } catch(err) {
+        showLoading(true, "Data Load Failed");
       }
     }
-
-    loadStreamFromId();
+    init();
   </script>
 
-  <!-- Anti Adblock / Brave Shield Script -->
-  <div class="adb" id="adb" style="display: none;">
-    <div class="adbs">
-      <h3>Adblock/Brave Shields Detected</h3>
-      <p>Please disable your adblocker or Brave Shields to continue browsing.</p>
-    </div>
-  </div>
-  <style>
-    .adb { position: fixed; width: 100%; height: 100%; left: 0; top: 0; background: rgba(0, 0, 0, 0.85); z-index: 9999999; display: flex; align-items: center; justify-content: center; }
-    .adbs { background: #fff; padding: 30px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; font-family: Arial, sans-serif;}
-    .adbs h3 { color: #d00; margin-bottom: 15px; }
-  </style>
+  <!-- Anti-Adblock (আপনার দেওয়া লজিক) -->
+  <div class="adb" id="adb" style="display:none;"><div class="adbs"><h3>Adblock Detected</h3><p>Please disable your adblocker or Brave Shields.</p></div></div>
+  <style>.adb{position:fixed;width:100%;height:100%;top:0;left:0;background:rgba(0,0,0,0.9);z-index:9999999;display:flex;align-items:center;justify-content:center;}.adbs{background:#fff;padding:30px;border-radius:12px;text-align:center;width:90%;max-width:400px;font-family:Arial;} .adbs h3 {color:red;}</style>
   <script>
-    async function checkAdblock() {
-      let blocked = false;
-      const bait = document.createElement("div");
-      bait.className = "ad adsbox ad-banner adsense ad-container sponsored";
-      bait.style.cssText = "width:1px;height:1px;position:absolute;left:-9999px;";
-      document.body.appendChild(bait);
-      await new Promise(r => setTimeout(r, 500));
-      if (window.getComputedStyle(bait).display === "none" || bait.offsetHeight === 0) blocked = true;
-      bait.remove();
-      return blocked;
-    }
-    window.addEventListener("load", async () => {
-      if (await checkAdblock()) {
-        document.getElementById("adb").style.display = "flex";
-      }
-    });
+    async function checkAdblock(){let d=false;const b=document.createElement("div");b.className="ad adsbox ad-banner adsense sponsored";b.style.cssText="position:absolute;left:-9999px;";document.body.appendChild(b);await new Promise(r=>setTimeout(r,500));if(b.offsetHeight===0)d=true;b.remove();return d;}
+    window.addEventListener("load", async ()=>{if(await checkAdblock())document.getElementById("adb").style.display="flex";});
   </script>
 </body>
 </html>
