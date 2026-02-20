@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FanCode Live Player</title>
+<title>FanCode 240p Test Player</title>
 
-<!-- 🔥 JW Player Library -->
 <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
 
 <style>
@@ -14,120 +13,85 @@ body{
   background:black;
   font-family:Arial;
 }
+
 #player{
   width:100%;
-  height:100vh;
+  height:70vh;
 }
-.loading{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  color:white;
-  font-size:18px;
+
+#debug{
+  background:#111;
+  color:#00ff00;
+  padding:10px;
+  height:30vh;
+  overflow:auto;
+  font-size:12px;
+  border-top:2px solid #333;
+  white-space:pre-wrap;
 }
 </style>
 </head>
 <body>
 
 <div id="player"></div>
-<div class="loading" id="loading">Loading stream...</div>
+<div id="debug">Debug Console:\n</div>
 
 <script>
 
-const JSON_URL = "https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json";
+// 🔥 240p Direct Link
+const VIDEO_URL = "https://in-mc-flive.fancode.com/mumbai/139412_english_hls_3271f4d7c684772_1ta-di_h264/240p.m3u8?hdntl=Expires=1771661948~_GO=Generated~acl=/mumbai/139412_english_hls_3271f4d7c684772_1ta-di_h264/*~Signature=AScLvDs2IRoohFM0XThlCAqU-D9N4lOyPU-XLHmZ1G4BQKt2DHg_lN1IXnhsZdixr0NocBoZHyTN1M6OXo7TX32SITsG";
 
-const params = new URLSearchParams(window.location.search);
-const matchId = params.get("id");
+const debugBox = document.getElementById("debug");
 
-let player;
-
-// 🔎 Extract all quality .m3u8 links from master playlist
-function extractStreams(masterText){
-    if(!masterText) return [];
-
-    const lines = masterText.split("\n");
-    const sources = [];
-
-    for(let line of lines){
-        line = line.trim();
-
-        if(line.includes(".m3u8")){
-            let label = "Auto";
-
-            if(line.includes("240p")) label = "240p";
-            else if(line.includes("360p")) label = "360p";
-            else if(line.includes("480p")) label = "480p";
-            else if(line.includes("540p")) label = "540p";
-            else if(line.includes("720p")) label = "720p";
-            else if(line.includes("1080p")) label = "1080p";
-
-            sources.push({
-                file: line,
-                label: label,
-                type: "hls"
-            });
-        }
-    }
-
-    return sources;
+function log(msg){
+  const time = new Date().toLocaleTimeString();
+  debugBox.innerHTML += "[" + time + "] " + msg + "\n";
+  debugBox.scrollTop = debugBox.scrollHeight;
 }
 
-// 🚀 Load Stream From ID
-async function loadStream(){
+log("Initializing player...");
+log("Video URL loaded.");
 
-    if(!matchId){
-        document.getElementById("loading").innerText = "No match ID provided in URL";
-        return;
-    }
+const player = jwplayer("player");
 
-    try{
+player.setup({
+  file: VIDEO_URL,
+  type: "hls",
+  width: "100%",
+  height: "100%",
+  autostart: true,
+  primary: "html5",
+  hlshtml: true,
+  androidhls: true,
+  preload: "auto"
+});
 
-        const response = await fetch(JSON_URL);
-        const data = await response.json();
+player.on("ready", function(){
+  log("Player READY.");
+});
 
-        const match = data.matches.find(m => m.match_id == matchId);
+player.on("play", function(){
+  log("Playback STARTED.");
+});
 
-        if(!match){
-            document.getElementById("loading").innerText = "Match not found";
-            return;
-        }
+player.on("buffer", function(){
+  log("Buffering...");
+});
 
-        if(!match.auto_streams || !match.auto_streams[0]){
-            document.getElementById("loading").innerText = "Stream not available";
-            return;
-        }
+player.on("error", function(e){
+  log("ERROR detected!");
+  log("Error Code: " + e.code);
+  log("Error Message: " + e.message);
+});
 
-        const masterPlaylist = match.auto_streams[0].auto;
-        const sources = extractStreams(masterPlaylist);
+player.on("setupError", function(e){
+  log("SETUP ERROR!");
+  log(JSON.stringify(e));
+});
 
-        if(!sources.length){
-            document.getElementById("loading").innerText = "No valid stream URLs found";
-            return;
-        }
-
-        document.getElementById("loading").style.display = "none";
-
-        player = jwplayer("player");
-
-        player.setup({
-            playlist: [{
-                title: match.title,
-                sources: sources
-            }],
-            width: "100%",
-            height: "100%",
-            autostart: true,
-            primary: "html5"
-        });
-
-    }catch(error){
-        document.getElementById("loading").innerText = "Error loading stream";
-        console.log(error);
-    }
-}
-
-loadStream();
+player.on("complete", function(){
+  log("Playback COMPLETED.");
+});
 
 </script>
 
