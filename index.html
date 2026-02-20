@@ -4,35 +4,56 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Live Sports Player</title>
+  
+  <!-- JW Player Library -->
   <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
+
   <style>
-    html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
-    #player { width: 100%; height: 100vh; }
+    /* পুরো স্ক্রিন কালো এবং ভিডিও ঠিক মাঝখানে রাখার ডিজাইন */
+    html, body { 
+      margin: 0; 
+      padding: 0;
+      width: 100%; 
+      height: 100%; 
+      background: #000000; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      overflow: hidden; 
+    }
     
-    #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; color:white; font-family:Arial; }
-    .spinner { width:50px; height:50px; border:5px solid rgba(255,255,255,0.1); border-top-color:#e94560; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:15px; }
+    #player-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* শুধুমাত্র লোডিং স্ক্রিনের ডিজাইন */
+    #loading-overlay { 
+      position: absolute; top:0; left:0; width:100%; height:100%; 
+      background: #000000; display:flex; flex-direction:column; 
+      justify-content:center; align-items:center; z-index:99999; 
+      color:white; font-family:Arial, sans-serif; 
+    }
+    .spinner { 
+      width:50px; height:50px; border:5px solid rgba(255,255,255,0.1); 
+      border-top-color:#e94560; border-radius:50%; 
+      animation:spin 1s linear infinite; margin-bottom:15px; 
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
-    #match-info { position:absolute; top:15px; left:15px; background:rgba(233,69,96,0.9); color:white; padding:8px 15px; border-radius:20px; font-size:14px; font-family:Arial; font-weight:bold; z-index:100; display:none; pointer-events:none; }
-    
-    /* Quality Menu */
-    .jw-quality-selector { position:absolute; bottom:60px; right:20px; background:rgba(28,28,28,0.95); backdrop-filter:blur(5px); border-radius:8px; z-index:999999; display:none; border:1px solid rgba(255,255,255,0.2); font-family:Arial; min-width:140px; box-shadow:0 5px 20px rgba(0,0,0,0.8); }
-    .jw-quality-selector.show { display:block; }
-    .jw-quality-item { padding:12px 20px; color:rgba(255,255,255,0.9); cursor:pointer; font-size:14px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.1); }
-    .jw-quality-item:last-child { border-bottom:none; }
-    .jw-quality-item:hover { background:rgba(233,69,96,0.5); color:white; }
-    .jw-quality-item.active { background:#e94560; color:white; font-weight:bold; position:relative; }
-    .jw-quality-item.active::before { content:'✓'; position:absolute; left:15px; color:white; }
-    
-    #quality-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:30px; font-size:14px; z-index:99999; display:none; font-family:Arial; border:1px solid rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
-  <div id="loading-overlay"><div class="spinner"></div><div id="loading-text">Loading Stream...</div></div>
-  <div id="quality-loading">Switching quality...</div>
-  <div id="match-info"></div>
-  <div id="quality-selector" class="jw-quality-selector"></div>
-  <div id="player"></div>
+
+  <!-- লোডিং স্ক্রিন -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div id="loading-text">Loading Stream...</div>
+  </div>
+
+  <!-- মেইন ভিডিও প্লেয়ার -->
+  <div id="player-container">
+    <div id="player"></div>
+  </div>
 
   <script>
     const jsonUrl = 'https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json';
@@ -40,122 +61,91 @@
     const urlParams = new URLSearchParams(window.location.search);
     const matchId = urlParams.get('id');
 
-    let player = null;
-    let currentQuality = '';
-    let qualityUrls = [];
-
-    function showLoading(s, t="Loading...") {
-      document.getElementById('loading-overlay').style.display = s ? 'flex' : 'none';
-      if(s) document.getElementById('loading-text').innerText = t;
+    function showLoading(show, text="Loading...") {
+      document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+      if(show) document.getElementById('loading-text').innerText = text;
     }
 
+    // কাঁচা টেক্সট থেকে কোয়ালিটি লিংক বের করার লজিক
     function extractStreamUrls(text) {
       if(!text) return [];
       const lines = text.split('\n');
       const streams = [];
-      const qMap = {'240p':1, '360p':2, '480p':3, '540p':4, '720p':5, '1080p':6};
+      
       for(let line of lines) {
         line = line.trim();
         if(line.startsWith('http')) {
           let q = 'Auto';
-          if(line.includes('240p')) q='240p'; else if(line.includes('360p')) q='360p'; else if(line.includes('480p')) q='480p'; else if(line.includes('540p')) q='540p'; else if(line.includes('720p')) q='720p'; else if(line.includes('1080p')) q='1080p';
-          streams.push({url:line, quality:q, order: qMap[q]||0});
+          if(line.includes('240p')) q='240p'; 
+          else if(line.includes('360p')) q='360p'; 
+          else if(line.includes('480p')) q='480p'; 
+          else if(line.includes('540p')) q='540p'; 
+          else if(line.includes('720p')) q='720p'; 
+          else if(line.includes('1080p')) q='1080p';
+          
+          streams.push({
+            url: line, 
+            quality: q
+          });
         }
       }
-      return streams.sort((a,b) => b.order - a.order);
-    }
-
-    function buildMenu() {
-      const sel = document.getElementById('quality-selector');
-      sel.innerHTML = '';
-      qualityUrls.forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'jw-quality-item';
-        if(s.quality === currentQuality) div.classList.add('active');
-        div.innerText = s.quality;
-        div.onclick = (e) => { 
-          e.stopPropagation(); 
-          changeQuality(s.url, s.quality); 
-          sel.classList.remove('show'); 
-        };
-        sel.appendChild(div);
-      });
-    }
-
-    function changeQuality(url, label) {
-      currentQuality = label;
-      buildMenu();
-      document.getElementById('quality-loading').style.display = 'block';
-      const pos = player.getPosition();
-      
-      player.load([{ file: proxyBaseUrl + encodeURIComponent(url), label: label, type: 'hls' }]);
-      player.once('play', () => {
-        document.getElementById('quality-loading').style.display = 'none';
-        if(pos > 0) player.seek(pos);
-      });
+      return streams;
     }
 
     async function init() {
-      if(!matchId) return showLoading(true, "Error: No Match ID");
+      if(!matchId) return showLoading(true, "Error: No Match ID provided");
+
       try {
         const res = await fetch(jsonUrl);
         const data = await res.json();
         const match = data.matches.find(m => m.match_id == matchId);
+        
         if(!match) return showLoading(true, "Match Not Found");
         
-        document.getElementById('match-info').innerText = match.title + ' - ' + match.status;
-        document.getElementById('match-info').style.display = 'block';
-        
         const rawText = match.auto_streams && match.auto_streams[0] ? match.auto_streams[0].auto : null;
-        if(!rawText) return showLoading(true, "No Stream Data");
+        if(!rawText) return showLoading(true, "No Stream Data Available");
         
-        qualityUrls = extractStreamUrls(rawText);
-        if(qualityUrls.length === 0) return showLoading(true, "Stream Not Available");
-        
-        const def = qualityUrls[0];
-        currentQuality = def.quality;
-        buildMenu();
+        const extractedStreams = extractStreamUrls(rawText);
+        if(extractedStreams.length === 0) return showLoading(true, "Stream Not Available");
 
-        player = jwplayer('player').setup({
-          file: proxyBaseUrl + encodeURIComponent(def.url),
-          type: 'hls', 
+        // 🟢 JW Player-এর নেটিভ (Native) সোর্স তৈরি করা 
+        const jwSources = extractedStreams.map(stream => {
+          return {
+            file: proxyBaseUrl + encodeURIComponent(stream.url),
+            label: stream.quality,
+            type: 'hls'
+          };
+        });
+
+        // 🟢 মেইন প্লেয়ার সেটআপ 
+        jwplayer('player').setup({
+          sources: jwSources, // এখানে একসাথে সব কোয়ালিটি দিয়ে দেওয়া হলো
           autostart: true,
           mute: false,
           width: '100%',
           height: '100%',
-          stretching: 'uniform',
-          controls: true,
+          stretching: 'uniform', // ভিডিওকে ঠিক মাঝখানে সুন্দর করে বসাবে
           primary: 'html5',
-          hlshtml: true
+          hlshtml: true,
+          cast: {} // কাস্টিং অপশন চালু রাখলাম
         });
 
-        player.on('ready', () => {
+        // প্লেয়ার রেডি হলে লোডিং স্ক্রিন সরিয়ে দেবে
+        jwplayer('player').on('ready', () => {
           showLoading(false);
-          
-          const gearSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xOS40IDEzYy4xLS42LjEtMS4zIDAtMS45bDIuMS0xLjZjLjItLjIuMy0uNS4xLS43bC0yLTMuNWMtLjItLjMtLjUtLjQtLjgtLjNsLTIuNSAxYy0uNS0uNC0xLjEtLjctMS43LTFsLS40LTIuNmMwLS4zLS4zLS41LS42LS41aC00Yy0uMyAwLS42LjItLjYuNWwtLjQgMi42Yy0uNi4zLTEuMi42LTEuNyAxbC0yLjUtMWMtLjMtLjEtLjYgMC0uOC4zbC0yIDMuNWMtLjEuMi0uMS41LjEuN2wyLjEgMS42Yy0uMS42LS4xIDEuMyAwIDEuOWwtMi4xIDEuNmMtLjIuMi0uMy41LS4xLjdsMiAzLjVjLjIuMy41LjQuOC4zbDIuNS0xYzEuNS40IDEuMS43IDEuNyAxbC40IDIuNmMwIC4zLjMuNS42LjVoNGMuMyAwIC42LS4yLjYtLjVsLjQtMi42Yy42LS4zIDEuMi0uNiAxLjctMWwyLjUgMWMuMy4xLjYgMCAuOC0uM2wyLTMuNWMuMS0uMi4xLS41LS4xLS43bC0yLjEtMS42em0tNy40IDIuNWMtMS45IDAtMy41LTEuNi0zLjUtMy41czEuNi0zLjUgMy41LTMuNSAzLjUgMS42IDMuNSAzLjUtMS42IDMuNS0zLjUgMy41eiIvPjwvc3ZnPg==";
-          
-          try {
-            player.addButton(
-              gearSvg,
-              "Quality",
-              () => { document.getElementById('quality-selector').classList.toggle('show'); },
-              "quality-settings-btn"
-            );
-          } catch(e) { console.log("JW Player addButton API failed"); }
         });
 
-        document.addEventListener('click', (e) => {
-          const sel = document.getElementById('quality-selector');
-          if(sel.classList.contains('show') && !e.target.closest('.jw-button-color') && !sel.contains(e.target)) {
-            sel.classList.remove('show');
-          }
+        jwplayer('player').on('error', () => {
+          showLoading(true, "Stream Error. Please reload.");
         });
 
       } catch(err) {
-        showLoading(true, "Data Load Failed");
+        showLoading(true, "Data Load Failed. Check network.");
       }
     }
+
     init();
   </script>
+
 </body>
 </html>
