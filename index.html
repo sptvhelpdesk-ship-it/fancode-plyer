@@ -88,7 +88,6 @@
       document.getElementById('quality-loading').style.display = 'block';
       const pos = player.getPosition();
       
-      // type: 'hls' যুক্ত করা হলো যাতে মোবাইল এটাকে লাইভ স্ট্রিম হিসেবেই ধরে
       player.load([{ file: proxyBaseUrl + encodeURIComponent(url), label: label, type: 'hls' }]);
       player.once('play', () => {
         document.getElementById('quality-loading').style.display = 'none';
@@ -117,7 +116,6 @@
         currentQuality = def.quality;
         buildMenu();
 
-        // 👉 type: 'hls' - এটাই মোবাইল ব্রাউজারকে ঠিক করবে
         player = jwplayer('player').setup({
           file: proxyBaseUrl + encodeURIComponent(def.url),
           type: 'hls', 
@@ -134,7 +132,6 @@
         player.on('ready', () => {
           showLoading(false);
           
-          // 👉 THE BULLETPROOF OFFICIAL API (আর কোনো Hack নয়)
           const gearSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xOS40IDEzYy4xLS42LjEtMS4zIDAtMS45bDIuMS0xLjZjLjItLjIuMy0uNS4xLS43bC0yLTMuNWMtLjItLjMtLjUtLjQtLjgtLjNsLTIuNSAxYy0uNS0uNC0xLjEtLjctMS43LTFsLS40LTIuNmMwLS4zLS4zLS41LS42LS41aC00Yy0uMyAwLS42LjItLjYuNWwtLjQgMi42Yy0uNi4zLTEuMi42LTEuNyAxbC0yLjUtMWMtLjMtLjEtLjYgMC0uOC4zbC0yIDMuNWMtLjEuMi0uMS41LjEuN2wyLjEgMS42Yy0uMS42LS4xIDEuMyAwIDEuOWwtMi4xIDEuNmMtLjIuMi0uMy41LS4xLjdsMiAzLjVjLjIuMy41LjQuOC4zbDIuNS0xYzEuNS40IDEuMS43IDEuNyAxbC40IDIuNmMwIC4zLjMuNS42LjVoNGMuMyAwIC42LS4yLjYtLjVsLjQtMi42Yy42LS4zIDEuMi0uNiAxLjctMWwyLjUgMWMuMy4xLjYgMCAuOC0uM2wyLTMuNWMuMS0uMi4xLS41LS4xLS43bC0yLjEtMS42em0tNy40IDIuNWMtMS45IDAtMy41LTEuNi0zLjUtMy41czEuNi0zLjUgMy41LTMuNSAzLjUgMS42IDMuNSAzLjUtMS42IDMuNS0zLjUgMy41eiIvPjwvc3ZnPg==";
           
           try {
@@ -147,7 +144,6 @@
           } catch(e) { console.log("JW Player addButton API failed"); }
         });
 
-        // বাইরে ক্লিক করলে মেনু হাইড হবে
         document.addEventListener('click', (e) => {
           const sel = document.getElementById('quality-selector');
           if(sel.classList.contains('show') && !e.target.closest('.jw-button-color') && !sel.contains(e.target)) {
@@ -160,14 +156,6 @@
       }
     }
     init();
-  </script>
-
-  <!-- Anti-Adblock (আপনার দেওয়া লজিক) -->
-  <div class="adb" id="adb" style="display:none;"><div class="adbs"><h3>Adblock Detected</h3><p>Please disable your adblocker or Brave Shields.</p></div></div>
-  <style>.adb{position:fixed;width:100%;height:100%;top:0;left:0;background:rgba(0,0,0,0.9);z-index:9999999;display:flex;align-items:center;justify-content:center;}.adbs{background:#fff;padding:30px;border-radius:12px;text-align:center;width:90%;max-width:400px;font-family:Arial;} .adbs h3 {color:red;}</style>
-  <script>
-    async function checkAdblock(){let d=false;const b=document.createElement("div");b.className="ad adsbox ad-banner adsense sponsored";b.style.cssText="position:absolute;left:-9999px;";document.body.appendChild(b);await new Promise(r=>setTimeout(r,500));if(b.offsetHeight===0)d=true;b.remove();return d;}
-    window.addEventListener("load", async ()=>{if(await checkAdblock())document.getElementById("adb").style.display="flex";});
   </script>
 </body>
 </html>
