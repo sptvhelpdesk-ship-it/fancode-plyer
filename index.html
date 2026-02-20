@@ -6,8 +6,8 @@
   <title>Live Sports Player</title>
   <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
   <style>
-    /* Update 2: Center player perfectly like screenshot 3 */
-    html, body { margin: 0; height: 100%; background: black; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+    /* একদম আগের অরিজিনাল বেস কোড, কোনো হাত দেওয়া হয়নি */
+    html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
     #player { width: 100%; height: 100vh; }
     
     #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; color:white; font-family:Arial; }
@@ -16,42 +16,45 @@
     
     #match-info { position:absolute; top:15px; left:15px; background:rgba(233,69,96,0.9); color:white; padding:8px 15px; border-radius:20px; font-size:14px; font-family:Arial; font-weight:bold; z-index:100; display:none; pointer-events:none; }
     
-    /* Update 3: Quality Menu exact design matching screenshot */
+    /* আপডেট: কোয়ালিটি মেনু একদম ২ নাম্বার স্ক্রিনশটের মতো ডিজাইন করা হয়েছে */
     .jw-quality-selector { 
       position:absolute; 
       bottom:60px; 
       right:20px; 
-      background:rgba(30, 30, 30, 0.95); /* Dark background */
+      background:rgba(30, 30, 30, 0.95); 
       border-radius:5px; 
-      z-index:2147483647; /* Highest z-index for Fullscreen fix */
+      z-index:99999999; /* ফুলস্ক্রিনের জন্য হাইয়েস্ট ইনডেক্স */
       display:none; 
       font-family:Arial, sans-serif; 
       min-width:160px; 
-      box-shadow:0 5px 20px rgba(0,0,0,0.8); 
-      overflow: hidden; 
+      box-shadow:0 5px 20px rgba(0,0,0,0.9); 
+      overflow: hidden;
     }
     .jw-quality-selector.show { display:block; }
     .jw-quality-item { 
-      padding:12px 20px; 
-      color:rgba(255,255,255,0.9); 
+      padding:12px 20px 12px 45px; 
+      color:#d1d1d1; 
       cursor:pointer; 
-      font-size:15px; 
-      text-align:right; /* Align text to right side */
-      border-bottom:1px solid rgba(255,255,255,0.05); 
+      font-size:14px; 
+      text-align:right; 
+      border-bottom:1px solid #333; 
       position:relative; 
     }
     .jw-quality-item:last-child { border-bottom:none; }
-    .jw-quality-item:hover { background:rgba(255,255,255,0.1); color:white; }
+    .jw-quality-item:hover { background:#444; color:white; }
+    
+    /* লাল ব্যাকগ্রাউন্ড এবং টিক চিহ্ন (একদম স্ক্রিনশটের মতো) */
     .jw-quality-item.active { 
-      background:#eb3b5a; /* Red/Pink color exact matching */
+      background:#f04360; 
       color:white; 
       font-weight:bold; 
     }
     .jw-quality-item.active::before { 
       content:'✓'; 
       position:absolute; 
-      left:15px; /* Checkmark on left side */
+      left:15px; 
       color:white; 
+      font-size: 16px;
     }
     
     #quality-loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:30px; font-size:14px; z-index:99999; display:none; font-family:Arial; border:1px solid rgba(255,255,255,0.2); }
@@ -60,10 +63,15 @@
 <body>
   <div id="loading-overlay"><div class="spinner"></div><div id="loading-text">Loading Stream...</div></div>
   <div id="quality-loading">Switching quality...</div>
+  
+  <!-- Title div is kept but will remain hidden -->
   <div id="match-info"></div>
   
-  <div id="quality-selector" class="jw-quality-selector"></div>
+  <!-- Player container -->
   <div id="player"></div>
+  
+  <!-- Quality Selector -->
+  <div id="quality-selector" class="jw-quality-selector"></div>
 
   <script>
     const jsonUrl = 'https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json';
@@ -136,7 +144,7 @@
         
         document.getElementById('match-info').innerText = match.title + ' - ' + match.status;
         
-        // Update 1: Hide Title without deleting the code (Commented out display block)
+        // আপডেট ১: ভিডিওর উপরের টাইটেল হাইড করা হয়েছে (এখানে কোড কমেন্ট করা আছে)
         // document.getElementById('match-info').style.display = 'block';
         
         const rawText = match.auto_streams && match.auto_streams[0] ? match.auto_streams[0].auto : null;
@@ -165,11 +173,11 @@
         player.on('ready', () => {
           showLoading(false);
           
-          // Update 4: Fullscreen Fix - Insert quality selector inside JWPlayer wrapper
-          const jwContainer = document.querySelector('.jw-player');
+          // আপডেট ২: ফুলস্ক্রিনে মেনু শো করানোর জন্য মেনুটিকে প্লেয়ারের ভেতরে সেভ করা হলো
+          const playerDiv = document.getElementById('player');
           const qualityMenu = document.getElementById('quality-selector');
-          if (jwContainer && qualityMenu) {
-            jwContainer.appendChild(qualityMenu);
+          if (playerDiv && qualityMenu) {
+            playerDiv.appendChild(qualityMenu);
           }
           
           const gearSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xOS40IDEzYy4xLS42LjEtMS4zIDAtMS45bDIuMS0xLjZjLjItLjIuMy0uNS4xLS43bC0yLTMuNWMtLjItLjMtLjUtLjQtLjgtLjNsLTIuNSAxYy0uNS0uNC0xLjEtLjctMS43LTFsLS40LTIuNmMwLS4zLS4zLS41LS42LS41aC00Yy0uMyAwLS42LjItLjYuNWwtLjQgMi42Yy0uNi4zLTEuMi42LTEuNyAxbC0yLjUtMWMtLjMtLjEtLjYgMC0uOC4zbC0yIDMuNWMtLjEuMi0uMS41LjEuN2wyLjEgMS42Yy0uMS42LS4xIDEuMyAwIDEuOWwtMi4xIDEuNmMtLjIuMi0uMy41LS4xLjdsMiAzLjVjLjIuMy41LjQuOC4zbDIuNS0xYzEuNS40IDEuMS43IDEuNyAxbC40IDIuNmMwIC4zLjMuNS42LjVoNGMuMyAwIC42LS4yLjYtLjVsLjQtMi42Yy42LS4zIDEuMi0uNiAxLjctMWwyLjUgMWMuMy4xLjYgMCAuOC0uM2wyLTMuNWMuMS0uMi4xLS41LS4xLS43bC0yLjEtMS42em0tNy40IDIuNWMtMS45IDAtMy41LTEuNi0zLjUtMy41czEuNi0zLjUgMy41LTMuNSAzLjUgMS42IDMuNSAzLjUtMS42IDMuNS0zLjUgMy41eiIvPjwvc3ZnPg==";
