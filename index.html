@@ -49,16 +49,17 @@
         bottom: 80px;
         left: 10px;
         right: 10px;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.9);
         color: #00ff00;
-        font-family: monospace;
-        font-size: 12px;
-        padding: 10px;
-        border: 1px solid #333;
-        max-height: 150px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        padding: 15px;
+        border: 2px solid #444;
+        max-height: 200px;
         overflow-y: auto;
         z-index: 1000;
-        pointer-events: none;
+        line-height: 1.5;
+        border-radius: 5px;
       }
 
       @media (max-width: 768px) {
@@ -66,7 +67,6 @@
         .video-container {max-width: 100%;height:100%}
       }
 
-      /* YouTube Theme CSS */
       .youtube-theme .shaka-played-range { background: rgb(255,0,0) !important; }
       .youtube-theme .shaka-seek-bar-container input[type=range]::-webkit-slider-thumb { background: #FF0000; }
       .shaka-spinner-container, .shaka-spinner, .shaka-spinner-svg { display: none !important; }
@@ -80,15 +80,29 @@
     </div>
   </div>
 
-  <!-- Debugger Box -->
-  <div id="debugger-box">DEBUGGER: Player Ready...</div>
+  <!-- Detailed Debugger Box -->
+  <div id="debugger-box"><b>[SYSTEM]</b> Player Engine Ready...</div>
 
   <script>
     const debugBox = document.getElementById('debugger-box');
-    function logDebug(msg) {
+    function logDebug(msg, color = "#00ff00") {
       const time = new Date().toLocaleTimeString();
-      debugBox.innerHTML += `<br>[${time}] ${msg}`;
+      debugBox.innerHTML += `<br><span style="color:${color}">[${time}] ${msg}</span>`;
       debugBox.scrollTop = debugBox.scrollHeight;
+    }
+
+    // Function to translate error codes to Bengali/English explanation
+    function getErrorExplanation(error) {
+      switch(error.code) {
+        case 1001: return "লিঙ্কটি খুঁজে পাওয়া যায়নি (404 Not Found)। দয়া করে URL চেক করুন।";
+        case 1002: return "সার্ভার এরর (Bad HTTP Status)। সার্ভার আপনার রিকোয়েস্ট রিজেক্ট করেছে। লিঙ্কটি হয়তো এক্সপায়ার হয়েছে বা ব্লক করা হয়েছে।";
+        case 1003: return "নেটওয়ার্কের সমস্যা বা টাইম-আউট। আপনার ইন্টারনেট কানেকশন চেক করুন।";
+        case 3014: return "ভিডিও ফরম্যাট সাপোর্ট করছে না। এটি সম্ভবত একটি ইনভ্যালিড MPD বা M3U8 ফাইল।";
+        case 3015: return "প্লেলিস্ট বা ম্যানিফেস্ট ফাইলটি পড়তে পারছে না (Parsing Error)।";
+        case 6007: return "DRM কী (K1 বা K2) ভুল দেওয়া হয়েছে। ভিডিওটি ডিক্রিপ্ট করা সম্ভব হচ্ছে না।";
+        case 6008: return "আপনার ব্রাউজার এই ভিডিওর DRM সিকিউরিটি সাপোর্ট করছে না।";
+        default: return "অজানা সমস্যা। বিস্তারিত: " + error.message;
+      }
     }
 
     const queryParams = new URLSearchParams(window.location.search);
@@ -102,13 +116,13 @@
 
     async function initializePlayer() {
       if (!streamUrl) {
-        logDebug("<span style='color:red'>ERROR: No URL found in '?play=' parameter!</span>");
+        logDebug("ERROR: আপনি কোনো ভিডিও লিঙ্ক (?play=) দেননি!", "red");
         return;
       }
 
       try {
         player = new shaka.Player(video);
-        logDebug("Engine: Shaka Player Initialized.");
+        logDebug("Engine: Shaka Player চালু হয়েছে।");
 
         const ui = new shaka.ui.Overlay(player, container, video);
         ui.configure({
@@ -120,34 +134,31 @@
           abr: { enabled: true }
         };
 
-        // ClearKey DRM Setup
         if (k1 && k2) {
-          logDebug("DRM: ClearKey Detected. Applying K1 and K2...");
-          config.drm = {
-            clearKeys: { [k1]: k2 }
-          };
+          logDebug("DRM: ClearKey পাওয়া গেছে। কী সেট করা হচ্ছে...");
+          config.drm = { clearKeys: { [k1]: k2 } };
         } else {
-          logDebug("DRM: No Keys found (k1, k2). Playing as normal stream.");
+          logDebug("Info: কোনো DRM কী (k1, k2) নেই, সাধারণ স্ট্রীম হিসেবে চেষ্টা করা হচ্ছে।", "yellow");
         }
 
         player.configure(config);
 
-        logDebug("Status: Loading Stream...");
+        logDebug("Status: ভিডিও লোড করার চেষ্টা চলছে...");
         await player.load(streamUrl);
-        logDebug("<span style='color:yellow'>SUCCESS: Stream Loaded Successfully!</span>");
+        logDebug("SUCCESS: ভিডিও সাকসেসফুলি লোড হয়েছে!", "cyan");
         
         video.play().then(() => {
-            logDebug("Playback: Started.");
+            logDebug("Playback: ভিডিও প্লে শুরু হয়েছে।");
         }).catch(e => {
-            logDebug("Playback: Muted Autoplay triggered.");
+            logDebug("Notice: ব্রাউজার অটো-প্লে আটকেছে, মিউট অবস্থায় চালানো হচ্ছে।", "yellow");
             video.muted = true;
             video.play();
         });
 
       } catch (error) {
-        logDebug("<span style='color:red'>CRITICAL ERROR: " + error.code + " - " + error.message + "</span>");
-        if (error.code == 6007) logDebug("Hint: The License or Keys (k1, k2) are incorrect.");
-        if (error.code == 1001) logDebug("Hint: Video file not found. Check the 'play' URL.");
+        const explanation = getErrorExplanation(error);
+        logDebug(`CRITICAL ERROR: ${error.code}`, "red");
+        logDebug(`ব্যাখ্যা: ${explanation}`, "orange");
       }
     }
 
