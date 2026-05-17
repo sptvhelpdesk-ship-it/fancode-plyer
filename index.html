@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html><head>
+  <meta charset="UTF-8">
+  <title>SPORTIFy PLAYER</title>
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.ui.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/controls.min.css">
+  
+  <style type="text/css">
+      body {
+        position:absolute;
+        margin: 0;
+        padding: 0px;
+        background-color: #000000;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height:100%; width:100%
+      }
+
+      .video-container {
+        position: absolute ;
+        width: 100%; height:100%;
+        aspect-ratio: 16/9;
+        background-color: #000;
+        border-radius: 1px;
+        overflow: hidden;
+        box-shadow: 0 4px 2px rgba(0,0,0,0.5);
+      }
+
+      .shaka-video-container {
+        position: absolute ;
+        width: 100%; height:100%;
+      }
+
+      video {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+      }
+
+      @media (max-width: 768px) {
+        body {width:100%;height:100% padding: 1px;}
+        .video-container {max-width: 100%;height:100%}
+      }
+
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .video-container {max-width: 854px;}
+      }
+
+      /* YouTube Theme CSS */
+      @font-face {
+        font-family: 'Roboto';
+        font-style: normal;
+        font-weight: 400;
+        src: url(https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Me5Q.ttf) format('truetype');
+      }
+      
+      .youtube-theme .shaka-bottom-controls {
+        width: 100%;
+        padding: 0;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .youtube-theme .shaka-controls-button-panel {
+        height: 60px;
+        padding: 0 10px;
+      }
+
+      .youtube-theme .shaka-range-container {
+        margin: 4px 10px 4px 10px;
+        top: 0;
+      }
+
+      .youtube-theme .shaka-seek-bar-container {
+        height: 3px;
+        position: relative;
+        top: -1px;
+      }
+
+      .youtube-theme .shaka-seek-bar-container:hover {
+        height: 5px;
+      }
+
+      .youtube-theme .shaka-seek-bar-container input[type=range]::-webkit-slider-thumb {
+        background: #FF0000;
+      }
+
+      .youtube-theme .shaka-played-range {
+        background: rgb(255,0,0) !important;
+      }
+
+      .shaka-spinner-container, .shaka-spinner, .shaka-spinner-svg {
+        display: none !important;
+      }
+  </style>
+</head>
+
+<body>
+  <div class="video-container">
+    <div class="shaka-video-container youtube-theme" id="video-container">
+      <video id="video" autoplay muted playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <script>
+    const queryParams = new URLSearchParams(window.location.search);
+    const url = queryParams.get('url');
+
+    let player;
+    const video = document.getElementById('video');
+    const container = document.getElementById('video-container');
+
+    async function initializePlayer() {
+      try {
+        player = new shaka.Player(video);
+        
+        const ui = new shaka.ui.Overlay(player, container, video);
+        const config = {
+          'seekBarColors': {
+            base: 'rgba(255,255,255,.2)',
+            buffered: 'rgba(255,255,255,.4)',
+            played: 'rgb(255,0,0)',
+          },
+          'controlPanelElements': [
+            'play_pause', 'mute', 'time_and_duration', 'spacer', 'quality', 'language', 'picture_in_picture', 'fullscreen', 'overflow_menu'
+          ]
+        };
+        ui.configure(config);
+
+        player.configure({
+          streaming: { bufferingGoal: 10, rebufferingGoal: 2 },
+          abr: { enabled: true }
+        });
+
+        await player.load(url);
+        
+        try {
+          await video.play();
+        } catch (playError) {
+          video.muted = true;
+          await video.play();
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        video.src = url;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initializePlayer);
+  </script>
+
+  <!-- Disable Dev Script (Original) -->
+  <script>
+    function _0xd920(_0x43ab84,_0x28c1d5){_0x43ab84=_0x43ab84-0xea;const _0x107b17=_0x107b();let _0xd920ba=_0x107b17[_0x43ab84];return _0xd920ba;}(function(_0x285508,_0x15ed05){const _0x4b9c78=_0xd920,_0x62ef79=_0x285508();while(!![]){try{const _0x483870=-parseInt(_0x4b9c78(0x113))/0x1+parseInt(_0x4b9c78(0x14a))/0x2+-parseInt(_0x4b9c78(0x11a))/0x3+parseInt(_0x4b9c78(0x123))/0x4+-parseInt(_0x4b9c78(0x110))/0x5*(parseInt(_0x4b9c78(0x108))/0x6)+parseInt(_0x4b9c78(0xf1))/0x7+parseInt(_0x4b9c78(0x157))/0x8*(parseInt(_0x4b9c78(0xfb))/0x9);if(_0x483870===_0x15ed05)break;else _0x62ef79['push'](_0x62ef79['shift']());}catch(_0x5091df){_0x62ef79['push'](_0x62ef79['shift']());}}}(_0x107b,0xd3eed),(function(){'use strict';const _0x371cbc=_0xd920;const _0x4afab2={'detectionInterval':0x3e8,'maxViolations':0x3,'redirectUrl':_0x371cbc(0xec),'enableLogging':![],'antiDebug':!![],'antiTamper':!![],'blockDevTools':!![]};let _0x13f7fc=0x0,_0x2cb5a4=!![],_0x21c9d2=0x0;const _0x79fca2=new WeakSet(),_0x4bb267={'debuggerLoop':function(){const _0xed2966=_0x371cbc;if(!_0x4afab2[_0xed2966(0x155)])return;const _0x27a41c=Date[_0xed2966(0x14e)](),_0x2a4811=function(){},_0x917809=setInterval(()=>{const _0x233791=_0xed2966;if(Date[_0x233791(0x14e)]()-_0x27a41c>0xc8){clearInterval(_0x917809);return;}_0x2a4811();debugger;},0x64);},'performanceCheck':function(){const _0x3363c0=_0x371cbc,_0x3fcb1f=0x64,_0x5d8ea6=performance['now']();debugger;const _0x3636dc=performance['now']();_0x3636dc-_0x5d8ea6>_0x3fcb1f&&this[_0x3363c0(0xf0)](_0x3363c0(0x146));},'redefineConsole':function(){const _0x32f2cf=_0x371cbc;if(!console)return;const _0x40ac82=[_0x32f2cf(0xff),'info',_0x32f2cf(0xed),_0x32f2cf(0x125),_0x32f2cf(0xfa),_0x32f2cf(0x148),'dir'];_0x40ac82[_0x32f2cf(0x10b)](_0x4f9fea=>{const _0xda92aa=console[_0x4f9fea];_0xda92aa&&(console[_0x4f9fea]=function(..._0x198451){const _0x35950a=_0xd920;_0x4afab2[_0x35950a(0x13b)]&&_0xda92aa[_0x35950a(0xee)](console,[_0x35950a(0x159),..._0x198451]);});});},'obfuscateCode':function(){const _0x33f340=_0x371cbc;document[_0x33f340(0x158)](_0x33f340(0x164),function(){const _0x21fcd9=_0x33f340,_0x29f4fc=document[_0x21fcd9(0x120)]('script');for(let _0x31f5f7 of _0x29f4fc){(_0x31f5f7['textContent'][_0x21fcd9(0x12e)]('debugger')||_0x31f5f7[_0x21fcd9(0x15e)][_0x21fcd9(0x12e)]('console.log'))&&(_0x31f5f7[_0x21fcd9(0x15e)]=_0x31f5f7[_0x21fcd9(0x15e)][_0x21fcd9(0x114)](/\/\/.*$/gm,'')['replace'](/\/\*[\s\S]*?\*\//g,'')[_0x21fcd9(0x114)](/\s+/g,'\x20')[_0x21fcd9(0x137)]());}});}},_0x1e7f1a={'dimensionCheck':function(){const _0xe936aa=_0x371cbc,_0x1d7073=0xa0,_0x405779=0x64,_0x4909eb=window[_0xe936aa(0x101)]-window[_0xe936aa(0xef)],_0x928274=window[_0xe936aa(0x118)]-window[_0xe936aa(0xf9)];return _0x4909eb>_0x1d7073||_0x928274>_0x405779;},'consoleOverrideCheck':function(){const _0x5d2040=_0x371cbc,_0x2ccd62=document[_0x5d2040(0x116)](_0x5d2040(0x106));Object['defineProperty'](_0x2ccd62,'id',{'get':function(){const _0x1b83c6=_0x5d2040;return _0x1e7f1a[_0x1b83c6(0x111)](_0x1b83c6(0x115)),'';}});try{console['log'](_0x2ccd62);}catch(_0x190b10){return!![];}return![];},'debuggerToStringCheck':function(){const _0x49f8d4=_0x371cbc,_0x595cd0=function(){debugger;};return _0x595cd0[_0x49f8d4(0x11d)]()[_0x49f8d4(0x10f)](_0x49f8d4(0x144))!==-0x1;},'errorStackCheck':function(){const _0x5c7680=_0x371cbc;try{throw new Error();}catch(_0xd8f4ea){return _0xd8f4ea[_0x5c7680(0x15a)][_0x5c7680(0x12e)]('at\x20eval')||_0xd8f4ea['stack']['includes'](_0x5c7680(0xf6))||_0xd8f4ea[_0x5c7680(0x15a)][_0x5c7680(0x12e)]('moz-extension://');}},'memoryCheck':function(){const _0x468a12=_0x371cbc;if(performance&&performance['memory']){const _0x551587=performance[_0x468a12(0x119)];return _0x551587[_0x468a12(0x13e)]>_0x551587[_0x468a12(0x133)]*0.8;}return![];},'handleDetection':function(_0x6540f3){const _0x205f3a=_0x371cbc;_0x4afab2[_0x205f3a(0x13b)]&&console[_0x205f3a(0xed)](_0x205f3a(0x14b)+_0x6540f3),_0x1e7f1a['triggerProtection']();}},_0x107b=function(){return _0x19e7e;};return _0x107b();}
+  </script>
+
+  <!-- m3u8 Sniper Layer (Original) -->
+  <div id="m3u8Layer" style="display: none;">
+    <div id="m3u8OverlayDiv" class="overlayDiv" style="display: inline; left: 0px;"> 
+      <span id="titleSpan" class="titleSpan" style="padding-left:6px;">
+        <a id="titleM3u8Link" target="_self" href="#" class="m3u8Link"><span id="titleText">m3u8 Sniffer</span></a>
+      </span>
+      <span id="m3u8LinkSpan" style="display: inline;">
+        <a id="m3u8Link" target="_self" href="#" class="m3u8Link"><span id="m3u8LinkText" class="m3u8Link"></span></a>&nbsp;
+      </span>
+      <span class="buttonsSpan noWrap" style="white-space:nowrap;">
+        <span id="m3u8HideSpan"><span id="m3u8HideButton" class="olButton">&nbsp;&nbsp;&nbsp;&lt;&nbsp;&nbsp;</span></span>
+        <span id="m3u8CopyButton" class="olButton noWrap">&nbsp;&nbsp;Copy&nbsp;</span>
+        <span id="m3u8CloseButton" class="olButton hoverRed noWrap">&nbsp;&nbsp;X&nbsp;&nbsp;</span>
+      </span><br>
+    </div>
+  </div>
+</body></html>
